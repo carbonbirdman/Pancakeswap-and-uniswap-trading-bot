@@ -14,12 +14,6 @@ import requests
 import math
 import subprocess
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QObject, QThread, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QApplication, QPushButton, QTextEdit, QVBoxLayout, QWidget, QGraphicsObject
-from PyQt5.QtCore import QCoreApplication
-from PyQt5 import QtTest
 import fileinput
 import re
 import importlib
@@ -35,48 +29,21 @@ import requests
 
 sys.setrecursionlimit(1500)
 
-QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
-QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 
-# Written by Aviddot: https://github.com/aviddot/Pancakeswap-v2-trading-bot
+# Based on original code by Aviddot: https://github.com/aviddot/Pancakeswap-v2-trading-bot
 def __ne__(self, other):
     return not self.__eq__(other)
 
 
 cg = CoinGeckoAPI()
 
+#In multiprocessing, processes are spawned by creating a Process object and then
+#calling its start() method. Process follows the API of threading.Thread. A
+#trivial example of a multiprocess program is
 
-class Port(object):
-    def __init__(self, view):
-        self.view = view
+# need to set up workers of some sort
 
-    def flush(self):
-        pass
-
-    def write(self, text):
-        cursor = self.view.textCursor()
-        cursor.movePosition(QtGui.QTextCursor.End)
-        cursor.insertText(text)
-        self.view.setTextCursor(cursor)
-        self.view.ensureCursorVisible()
-
-
-@pyqtSlot(str)
-def trap_exc_during_debug(*args):
-    if configfile.debugmode == '1':
-        exception_type, exception_object, exception_traceback = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print(exc_type, fname, exc_tb.tb_lineno)
-
-
-sys.excepthook = trap_exc_during_debug
-
-
-@pyqtSlot()
 class Worker(QObject):
-    sig_step = pyqtSignal(int, str)  # worker id, step description: emitted every step through work() loop
-    sig_done = pyqtSignal(int)  # worker id: emitted at end of work()
-    sig_msg = pyqtSignal(str)  # message to be shown to user
 
     def __init__(self, id: int):
         super().__init__()
@@ -85,20 +52,7 @@ class Worker(QObject):
 
     def work(self):
         while self.__abort != True:
-            thread_name = QThread.currentThread().objectName()
-            thread_id = int(QThread.currentThreadId())  # cast to int() is necessary
-            self.sig_msg.emit('Running worker #{} from thread "{}" (#{})'.format(self.__id, thread_name, thread_id))
-
-            if 'step' not in locals():
-                step = 1
-            else:
-                step = 1
-            self.sig_step.emit(self.__id, 'step ' + str(step))
-            QCoreApplication.processEvents()
-            if self.__abort == True:
-                # note that "step" value will not necessarily be same for every thread
-                self.sig_msg.emit('Worker #{} aborting work at step {}'.format(self.__id, step))
-
+	# initialisation, don't need this in a loop
             importlib.reload(configfile)
             w33 = Web3()
             cg = CoinGeckoAPI()
@@ -121,8 +75,11 @@ class Worker(QObject):
             mcotoseeassell = float(configfile.mcotoseeassell)
             debugmode = int(configfile.debugmode)
 
-            # Written by Aviddot: https://github.com/aviddot/Pancakeswap-v2-trading-bot
-            ##for token_number,eth_address,high,low,activate,stoploss_value,stoploss_activate,trade_with_ERC,trade_with_ETH,fast_token in all_token_information:
+        # for token_number, eth_address, 
+	# high, low, activate, stoploss_value, stoploss_activate,
+	# trade_with_ERC, trade_with_ETH, fast_token 
+        # in all_token_information:
+	# we don't need 10 of these
             all_token_information = [
                 (1, str(configfile.token1ethaddress), float(configfile.token1high), float(configfile.token1low),
                  float(configfile.activatetoken1), float(configfile.token1stoploss), float(configfile.stoplosstoken1)
@@ -131,59 +88,22 @@ class Worker(QObject):
                 (2, str(configfile.token2ethaddress), float(configfile.token2high), float(configfile.token2low),
                  float(configfile.activatetoken2), float(configfile.token2stoploss), float(configfile.stoplosstoken2)
                  , float(configfile.tradewithERCtoken2), float(configfile.tradewithETHtoken2), '0',
-                 str(configfile.token2name), int(configfile.token2decimals)),
-                (3, str(configfile.token3ethaddress), float(configfile.token3high), float(configfile.token3low),
-                 float(configfile.activatetoken3), float(configfile.token3stoploss), float(configfile.stoplosstoken3)
-                 , float(configfile.tradewithERCtoken3), float(configfile.tradewithETHtoken3), '0',
-                 str(configfile.token3name), int(configfile.token3decimals)),
-                (4, str(configfile.token4ethaddress), float(configfile.token4high), float(configfile.token4low),
-                 float(configfile.activatetoken4), float(configfile.token4stoploss), float(configfile.stoplosstoken4)
-                 , float(configfile.tradewithERCtoken4), float(configfile.tradewithETHtoken4), '0',
-                 str(configfile.token4name), int(configfile.token4decimals)),
-                (5, str(configfile.token5ethaddress), float(configfile.token5high), float(configfile.token5low),
-                 float(configfile.activatetoken5), float(configfile.token5stoploss), float(configfile.stoplosstoken5)
-                 , float(configfile.tradewithERCtoken5), float(configfile.tradewithETHtoken5), '0',
-                 str(configfile.token5name), int(configfile.token5decimals)),
-                (6, str(configfile.token6ethaddress), float(configfile.token6high), float(configfile.token6low),
-                 float(configfile.activatetoken6), float(configfile.token6stoploss), float(configfile.stoplosstoken6)
-                 , float(configfile.tradewithERCtoken6), float(configfile.tradewithETHtoken6), '0',
-                 str(configfile.token6name), int(configfile.token6decimals)),
-                (7, str(configfile.token7ethaddress), float(configfile.token7high), float(configfile.token7low),
-                 float(configfile.activatetoken7), float(configfile.token7stoploss), float(configfile.stoplosstoken7)
-                 , float(configfile.tradewithERCtoken7), float(configfile.tradewithETHtoken7), '0',
-                 str(configfile.token7name), int(configfile.token7decimals)),
-                (8, str(configfile.token8ethaddress), float(configfile.token8high), float(configfile.token8low),
-                 float(configfile.activatetoken8), float(configfile.token8stoploss), float(configfile.stoplosstoken8)
-                 , float(configfile.tradewithERCtoken8), float(configfile.tradewithETHtoken8), '0',
-                 str(configfile.token8name), int(configfile.token8decimals)),
-                (9, str(configfile.token9ethaddress), float(configfile.token9high), float(configfile.token9low),
-                 float(configfile.activatetoken9), float(configfile.token9stoploss), float(configfile.stoplosstoken9)
-                 , float(configfile.tradewithERCtoken9), float(configfile.tradewithETHtoken9), '0',
-                 str(configfile.token9name), int(configfile.token9decimals)),
-                (10, str(configfile.token10ethaddress), float(configfile.token10high), float(configfile.token10low),
-                 float(configfile.activatetoken10), float(configfile.token10stoploss), float(configfile.stoplosstoken10)
-                 , float(configfile.tradewithERCtoken10), float(configfile.tradewithETHtoken10), '0',
-                 str(configfile.token10name), int(configfile.token10decimals))]
+                 str(configfile.token2name), int(configfile.token2decimals))]
 
-            # its now: for token_number,eth_address,high,low,activate,stoploss_value,stoploss_activate,trade_with_ERC,trade_with_ETH,fast_token,small_case_name,decimals in all_token_information:
+        # its now: for token_number,eth_address
+	# high,low,activate,stoploss_value,stoploss_activate
+        # trade_with_ERC,trade_with_ETH,fast_token
+        # small_case_name,decimals in all_token_information:
 
             for token_number, eth_address, high, low, activate, stoploss_value, stoploss_activate, trade_with_ERC, trade_with_ETH, fast_token, small_case_name, decimals in all_token_information:
                 if (high < low):
                     print(
                         'Stop the script, a tokenlow is higher than its tokenhigh')
                     count = 0
-                    QCoreApplication.processEvents()
-                    while self.__abort != True:
-                        QCoreApplication.processEvents()
-                        pass
                 if (stoploss_value > high):
                     print(
                         'Stop the script, a stoploss is higher than the tokenhigh')
                     count = 0
-                    QCoreApplication.processEvents()
-                    while self.__abort != True:
-                        QCoreApplication.processEvents()
-                        pass
                 if (ethtokeep > mcotoseeassell):
                     print(
                         'The buy/sell boundary is lower than the $ to keep in BNB after trade')
@@ -213,7 +133,7 @@ class Worker(QObject):
                 maindecimals = 18
             maincoinname = configfile.maincoinoption
             maincoinoption = ethaddress
-            append = QtCore.pyqtSignal(str)
+            #append = QtCore.pyqtSignal(str)
 
             if 'step' not in locals():
                 step = 1
