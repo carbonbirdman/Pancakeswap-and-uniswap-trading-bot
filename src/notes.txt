@@ -1,0 +1,5 @@
+# In multiprocessing, processes are spawned by creating a Process object and then
+# calling its start() method. Process follows the API of threading.Thread.
+# need to set up workers of some sort
+# for now just inline script this thing
+# initialisation, don't need this in a loop

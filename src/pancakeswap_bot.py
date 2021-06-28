@@ -1,6 +1,7 @@
 #!python
 # cython: language_level=3
 # Written by Aviddot: https://github.com/aviddot/Pancakeswap-v2-trading-bot
+# original code with QT interface
 
 import datetime
 from itertools import permutations

@@ -287,12 +287,14 @@ try:
             """Get the taker fee."""
             return 0.003
 
-        # ------ Market --------------------------------------------------------------------
+        --------------------------------------------------------
+
         @supports([1, 2])
         def get_eth_token_input_price(self, token: AddressLike, qty: Wei) -> Wei:
             """Public price for ETH to Token trades with an exact input."""
             if self.version == 1:
-                ex = self.exchange_contract(token)
+                ex = self.exchange_c
+        # ------ Market ------------ontract(token)
                 price: Wei = ex.functions.getEthToTokenInputPrice(qty).call()
             elif self.version == 2:
                 price = self.router.functions.getAmountsOut(
